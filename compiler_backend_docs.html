@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Compiler Language and Complete Compiler Design</title>
+  <style>
+    :root {
+      --bg: #f3f6fa;
+      --surface: #ffffff;
+      --surface-soft: #eef3f9;
+      --ink: #1d2a39;
+      --muted: #5d6b7b;
+      --primary: #0a4f7a;
+      --accent: #177e5f;
+      --warn: #8a5b00;
+      --border: #cfdae8;
+      --shadow: 0 10px 26px rgba(24, 40, 62, 0.1);
+      --code-bg: #f0f5fb;
+      --keyword-bg: #dbeeff;
+      --keyword-ink: #0c4f7b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Segoe UI", "Tahoma", "Verdana", sans-serif;
+      color: var(--ink);
+      line-height: 1.65;
+      background:
+        radial-gradient(circle at 0% 0%, #e8f2fb 0%, transparent 34%),
+        radial-gradient(circle at 100% 20%, #e8f6ef 0%, transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+      padding-top: 84px;
+    }
+
+    .navbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 999;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 14px rgba(21, 34, 54, 0.08);
+    }
+
+    .nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-family: "Consolas", "Cascadia Mono", monospace;
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--ink);
+      border: 1px solid transparent;
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      transition: all 0.22s ease;
+    }
+
+    .nav-links a:hover {
+      border-color: #bdd0e4;
+      background: #eaf3fc;
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 24px auto 40px;
+      padding: 0 22px;
+    }
+
+    .hero {
+      background: linear-gradient(122deg, #f8fcff 0%, #edf5fb 52%, #ecf7f1 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.35rem, 2.5vw, 2.2rem);
+      color: #103754;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 980px;
+    }
+
+    section {
+      margin-bottom: 26px;
+    }
+
+    article.card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    h2 {
+      font-size: clamp(1.15rem, 2.1vw, 1.8rem);
+      color: #144060;
+      border-left: 4px solid var(--accent);
+      padding-left: 10px;
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      color: #16557d;
+      margin: 16px 0 8px;
+    }
+
+    h4 {
+      font-size: 1rem;
+      color: #22587b;
+      margin: 12px 0 8px;
+    }
+
+    p {
+      margin-bottom: 10px;
+    }
+
+    ul {
+      margin-left: 18px;
+      margin-bottom: 10px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    .grid-2 {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      margin: 10px 0 12px;
+    }
+
+    .chip-card {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .chip-card strong {
+      color: #124b73;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .kw {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--keyword-bg);
+      color: var(--keyword-ink);
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.92rem;
+      border: 1px solid #c7ddf3;
+      margin: 1px 2px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      overflow-x: auto;
+      margin: 10px 0 12px;
+    }
+
+    code {
+      font-family: "Consolas", "Cascadia Mono", "Courier New", monospace;
+      font-size: 0.95rem;
+      color: #203746;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #e8f1fa;
+      color: #163f5d;
+      font-weight: 700;
+    }
+
+    .diagram-wrap {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 10px 0 14px;
+    }
+
+    .callout {
+      border: 1px solid #cadce9;
+      border-left: 4px solid var(--warn);
+      background: #fff8e8;
+      border-radius: 9px;
+      padding: 10px 12px;
+      color: #664609;
+      margin-top: 8px;
+    }
+
+    .long-content p {
+      margin-bottom: 12px;
+      text-align: justify;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 4px;
+      padding-bottom: 24px;
+    }
+
+    @media (max-width: 780px) {
+      .nav-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      body {
+        padding-top: 128px;
+      }
+
+      .hero,
+      article.card {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="brand">Mini Compiler - Language and Complete Design</div>
+      <ul class="nav-links">
+        <li><a href="#language-reference">Language Reference</a></li>
+        <li><a href="#compiler-architecture">Architecture</a></li>
+        <li><a href="#team-reflection">Team Reflection</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <h1>Language Reference Manual and Complete Compiler Design</h1>
+      <p>
+        This document formalizes the mini C-like language and explains the full compiler pipeline,
+        from source text to target output. It also records team reflections, engineering decisions,
+        and project outcomes after end-to-end implementation and testing.
+      </p>
+    </header>
+
+    <section id="language-reference">
+      <article class="card">
+        <header>
+          <h2>4. Language Reference Manual</h2>
+        </header>
+
+        <h3>4.1 Core Language Definition</h3>
+        <div class="grid-2">
+          <div class="chip-card">
+            <strong>Keywords</strong>
+            <span class="kw">int</span>
+            <span class="kw">float</span>
+            <span class="kw">bool</span>
+            <span class="kw">void</span>
+            <span class="kw">if</span>
+            <span class="kw">else</span>
+            <span class="kw">while</span>
+            <span class="kw">for</span>
+            <span class="kw">return</span>
+            <span class="kw">func</span>
+            <span class="kw">true</span>
+            <span class="kw">false</span>
+          </div>
+          <div class="chip-card">
+            <strong>Data Types</strong>
+            <span class="kw">int</span>: 32-bit signed integer<br />
+            <span class="kw">float</span>: decimal floating-point number<br />
+            <span class="kw">bool</span>: boolean value true or false<br />
+            <span class="kw">void</span>: function return type without value
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="chip-card">
+            <strong>Arithmetic Operators</strong>
+            <span class="kw">+</span>
+            <span class="kw">-</span>
+            <span class="kw">*</span>
+            <span class="kw">/</span>
+            <span class="kw">%</span>
+          </div>
+          <div class="chip-card">
+            <strong>Relational and Logical Operators</strong>
+            Relational:
+            <span class="kw">==</span>
+            <span class="kw">!=</span>
+            <span class="kw">&lt;</span>
+            <span class="kw">&gt;</span>
+            <span class="kw">&lt;=</span>
+            <span class="kw">&gt;=</span><br />
+            Logical:
+            <span class="kw">&&</span>
+            <span class="kw">||</span>
+            <span class="kw">!</span>
+          </div>
+        </div>
+
+        <h3>4.2 Syntax Rules</h3>
+        <ul>
+          <li>Each statement ends with <span class="kw">;</span>, except block delimiters <span class="kw">{ }</span>.</li>
+          <li>Identifiers follow pattern: letter or underscore, followed by letters, digits, or underscore.</li>
+          <li>Variables must be declared before use within a visible scope.</li>
+          <li>Function definitions begin with <span class="kw">func</span>, include return type, name, parameters, and block body.</li>
+          <li>Expressions respect precedence: unary, multiplicative, additive, relational, equality, logical and/or.</li>
+        </ul>
+
+        <h3>4.3 EBNF Grammar</h3>
+        <pre><code>Program        = { Declaration } ;
+Declaration    = VarDecl | FuncDecl | Statement ;
+VarDecl        = Type Identifier [ "=" Expression ] ";" ;
+Type           = "int" | "float" | "bool" | "void" ;
+
+FuncDecl       = "func" Type Identifier "(" [ ParamList ] ")" Block ;
+ParamList      = Param { "," Param } ;
+Param          = Type Identifier ;
+
+Block          = "{" { Statement } "}" ;
+Statement      = VarDecl
+               | AssignStmt
+               | IfStmt
+               | WhileStmt
+               | ForStmt
+               | ReturnStmt
+               | ExprStmt
+               | Block ;
+
+AssignStmt     = Identifier "=" Expression ";" ;
+IfStmt         = "if" "(" Expression ")" Statement [ "else" Statement ] ;
+WhileStmt      = "while" "(" Expression ")" Statement ;
+ForStmt        = "for" "(" [AssignStmtNoSemi] ";" [Expression] ";" [AssignStmtNoSemi] ")" Statement ;
+ReturnStmt     = "return" [ Expression ] ";" ;
+ExprStmt       = Expression ";" ;
+AssignStmtNoSemi = Identifier "=" Expression ;
+
+Expression     = LogicalOr ;
+LogicalOr      = LogicalAnd { "||" LogicalAnd } ;
+LogicalAnd     = Equality { "&&" Equality } ;
+Equality       = Relational { ("==" | "!=") Relational } ;
+Relational     = Additive { ("<" | ">" | "<=" | ">=") Additive } ;
+Additive       = Multiplicative { ("+" | "-") Multiplicative } ;
+Multiplicative = Unary { ("*" | "/" | "%") Unary } ;
+Unary          = ["!" | "-"] Primary ;
+Primary        = Number | Boolean | Identifier | CallExpr | "(" Expression ")" ;
+CallExpr       = Identifier "(" [ ArgList ] ")" ;
+ArgList        = Expression { "," Expression } ;
+
+Identifier     = letter { letter | digit | "_" } ;
+Number         = Integer | Float ;
+Boolean        = "true" | "false" ;</code></pre>
+
+        <h3>4.4 Control Structures</h3>
+        <h4>If-Else</h4>
+        <p>
+          Conditional execution evaluates a boolean expression. If the condition is true, the <span class="kw">if</span> body executes;
+          otherwise, the optional <span class="kw">else</span> body executes. Nested conditionals are supported through block statements.
+        </p>
+        <pre><code>if (score &gt;= 50) {
+  result = 1;
+} else {
+  result = 0;
+}</code></pre>
+
+        <h4>Loops: while and for</h4>
+        <p>
+          The <span class="kw">while</span> loop repeatedly executes while its condition remains true.
+          The <span class="kw">for</span> loop provides structured initialization, condition, and update in one header.
+        </p>
+        <pre><code>while (i &lt; 5) {
+  sum = sum + i;
+  i = i + 1;
+}
+
+for (j = 0; j &lt; 10; j = j + 1) {
+  total = total + j;
+}</code></pre>
+
+        <h3>4.5 Example Programs</h3>
+        <h4>Example 1: Arithmetic and Branching</h4>
+        <pre><code>int a = 8;
+int b = 3;
+int max;
+
+if (a &gt; b) {
+  max = a;
+} else {
+  max = b;
+}</code></pre>
+
+        <h4>Example 2: Factorial Using while</h4>
+        <pre><code>int n = 5;
+int fact = 1;
+
+while (n &gt; 1) {
+  fact = fact * n;
+  n = n - 1;
+}</code></pre>
+
+        <h4>Example 3: Function and for Loop</h4>
+        <pre><code>func int sumToN(int n) {
+  int s = 0;
+  int i;
+  for (i = 1; i &lt;= n; i = i + 1) {
+    s = s + i;
+  }
+  return s;
+}
+
+int out;
+out = sumToN(10);</code></pre>
+
+        <div class="callout">
+          Important concept: The language keeps syntax intentionally small and deterministic so parsing can be implemented via recursive descent with clear precedence handling.
+        </div>
+      </article>
+    </section>
+
+    <section id="compiler-architecture">
+      <article class="card">
+        <header>
+          <h2>5. Compiler Architecture Document</h2>
+        </header>
+
+        <h3>5.1 Phase-wise Breakdown</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Input</th>
+              <th>Output</th>
+              <th>Main Responsibility</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lexical Analysis</td>
+              <td>Source code characters</td>
+              <td>Token stream</td>
+              <td>Groups characters into lexemes and emits typed tokens with line/column metadata.</td>
+            </tr>
+            <tr>
+              <td>Syntax Analysis</td>
+              <td>Token stream</td>
+              <td>Parse tree / AST</td>
+              <td>Validates grammar structure and constructs hierarchical syntax representation.</td>
+            </tr>
+            <tr>
+              <td>Semantic Analysis</td>
+              <td>AST + symbol environment</td>
+              <td>Annotated AST + diagnostics</td>
+              <td>Performs scope resolution, declaration checks, type checking, and control-flow validity checks.</td>
+            </tr>
+            <tr>
+              <td>Intermediate Code Generation</td>
+              <td>Annotated AST</td>
+              <td>Three-address code (IR)</td>
+              <td>Transforms high-level constructs into low-level, linear, machine-independent operations.</td>
+            </tr>
+            <tr>
+              <td>Code Optimization</td>
+              <td>IR</td>
+              <td>Optimized IR</td>
+              <td>Applies constant folding, dead code elimination, copy propagation, and algebraic simplification.</td>
+            </tr>
+            <tr>
+              <td>Target Code Generation</td>
+              <td>Optimized IR</td>
+              <td>Stack-machine style target code</td>
+              <td>Maps IR operations into executable instruction sequence with labels and jumps.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>5.2 Data Flow Diagram (SVG)</h3>
+        <div class="diagram-wrap" role="img" aria-label="Compiler pipeline flow from source code to target code">
+          <svg width="1120" height="330" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                <polygon points="0 0, 9 3.5, 0 7" fill="#0a4f7a" />
+              </marker>
+            </defs>
+
+            <rect x="10" y="20" width="1100" height="290" rx="12" ry="12" fill="#f9fcff" stroke="#cfdae8" />
+
+            <rect x="36" y="120" width="150" height="70" rx="10" fill="#e8f1fb" stroke="#bcd0e5"/>
+            <text x="56" y="146" font-family="Segoe UI" font-size="14" fill="#12496f">Source Code</text>
+            <text x="52" y="166" font-family="Segoe UI" font-size="12" fill="#36566f">.vc / .txt file</text>
+
+            <rect x="220" y="120" width="155" height="70" rx="10" fill="#ebf7f1" stroke="#c2e1d5"/>
+            <text x="234" y="146" font-family="Segoe UI" font-size="14" fill="#165b45">Lexical</text>
+            <text x="235" y="166" font-family="Segoe UI" font-size="14" fill="#165b45">Analysis</text>
+
+            <rect x="410" y="120" width="155" height="70" rx="10" fill="#ebf7f1" stroke="#c2e1d5"/>
+            <text x="426" y="146" font-family="Segoe UI" font-size="14" fill="#165b45">Syntax</text>
+            <text x="426" y="166" font-family="Segoe UI" font-size="14" fill="#165b45">Analysis</text>
+
+            <rect x="600" y="120" width="155" height="70" rx="10" fill="#ebf7f1" stroke="#c2e1d5"/>
+            <text x="614" y="146" font-family="Segoe UI" font-size="14" fill="#165b45">Semantic</text>
+            <text x="614" y="166" font-family="Segoe UI" font-size="14" fill="#165b45">Analysis</text>
+
+            <rect x="790" y="75" width="155" height="60" rx="10" fill="#fff4e5" stroke="#f0d5aa"/>
+            <text x="801" y="104" font-family="Segoe UI" font-size="13" fill="#7a5314">IR Generation</text>
+
+            <rect x="790" y="160" width="155" height="60" rx="10" fill="#fff4e5" stroke="#f0d5aa"/>
+            <text x="809" y="189" font-family="Segoe UI" font-size="13" fill="#7a5314">Optimization</text>
+
+            <rect x="980" y="120" width="105" height="70" rx="10" fill="#e8f1fb" stroke="#bcd0e5"/>
+            <text x="989" y="146" font-family="Segoe UI" font-size="13" fill="#12496f">Target</text>
+            <text x="989" y="166" font-family="Segoe UI" font-size="13" fill="#12496f">Code</text>
+
+            <line x1="186" y1="155" x2="220" y2="155" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="375" y1="155" x2="410" y2="155" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="565" y1="155" x2="600" y2="155" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+
+            <line x1="755" y1="145" x2="790" y2="105" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="755" y1="165" x2="790" y2="190" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="945" y1="105" x2="980" y2="145" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+            <line x1="945" y1="190" x2="980" y2="165" stroke="#0a4f7a" stroke-width="2" marker-end="url(#arr)"/>
+
+            <rect x="425" y="230" width="260" height="52" rx="10" fill="#f2f6fb" stroke="#cfdae8"/>
+            <text x="438" y="252" font-family="Segoe UI" font-size="13" fill="#40596d">Shared structures: Symbol Table, Error List,</text>
+            <text x="438" y="270" font-family="Segoe UI" font-size="13" fill="#40596d">AST nodes and type metadata</text>
+
+            <line x1="487" y1="190" x2="487" y2="230" stroke="#567895" stroke-width="1.8" marker-end="url(#arr)"/>
+            <line x1="678" y1="190" x2="620" y2="230" stroke="#567895" stroke-width="1.8" marker-end="url(#arr)"/>
+          </svg>
+        </div>
+
+        <h3>5.3 Detailed Data Flow Explanation</h3>
+        <p>
+          The compiler starts by scanning source text and emitting a normalized token stream with
+          exact source positions. Syntax analysis consumes tokens and builds an AST according to the
+          language grammar. This AST captures hierarchical program structure while removing unnecessary
+          concrete syntax details such as redundant punctuation nodes.
+        </p>
+        <p>
+          Semantic analysis then traverses the AST using a scope stack and symbol table. Every declaration
+          introduces symbols; every usage is resolved to the nearest visible declaration. The analyzer attaches
+          inferred or declared types to expressions and statements, verifies assignment compatibility, checks
+          function return paths, and validates argument counts and parameter types in calls.
+        </p>
+        <p>
+          Intermediate code generation lowers AST nodes into three-address instructions such as temporary
+          assignments, conditional jumps, labels, and call operations. This IR provides a stable boundary
+          where optimization passes can operate without high-level grammar complexity. Optimization rewrites
+          IR to reduce runtime cost and code size while preserving behavior.
+        </p>
+        <p>
+          Finally, the target code generator maps optimized IR into a stack-machine style assembly format
+          with explicit control-flow labels. The output is suitable for an interpreter or virtual machine,
+          and its deterministic instruction patterns simplify debugging and testing.
+        </p>
+
+        <h3>5.4 Sample IR Snippet</h3>
+        <pre><code># Source: if (a &gt; b) max = a; else max = b;
+t1 = a &gt; b
+ifFalse t1 goto L_else
+max = a
+goto L_end
+L_else:
+max = b
+L_end:</code></pre>
+      </article>
+    </section>
+
+    <section id="team-reflection">
+      <article class="card long-content">
+        <header>
+          <h2>6. Team Reflection (Detailed Narrative)</h2>
+        </header>
+
+        <h3>6.1 Challenges Faced and Solutions</h3>
+        <p>
+          The most difficult challenge was designing a grammar that is expressive enough for functions,
+          conditionals, and loops while still remaining parser-friendly for a recursive descent implementation.
+          Our first grammar draft contained hidden left recursion inside expression productions and ambiguous
+          alternatives around statement parsing. These issues caused backtracking loops and inconsistent parse
+          trees in nested conditionals. We resolved this by separating precedence levels into dedicated non-terminals
+          and by converting problematic statement rules into deterministic lookahead-based branches.
+        </p>
+        <p>
+          Another major challenge appeared in semantic analysis, particularly around scope handling and symbol
+          shadowing. Initially, identifiers declared in inner blocks incorrectly replaced outer declarations
+          globally due to a flat table implementation. This caused false redeclaration errors and incorrect type
+          references. We replaced the flat table with a stack of scope frames and implemented nearest-scope-first
+          lookup. This change stabilized name resolution and made shadowing behavior predictable for nested blocks.
+        </p>
+        <p>
+          Error reporting quality also required significant iteration. Early versions stopped at the first syntax
+          or semantic failure, which made debugging user programs frustrating. We introduced phase-specific recovery
+          strategies: token synchronization in parser checkpoints, and semantic pass continuation after non-fatal
+          errors. With these improvements, users receive multiple actionable diagnostics in one run, including line
+          positions, expected symbols, and recommended fixes.
+        </p>
+        <p>
+          In code generation, control-flow translation for if-else and loops produced jump label collisions because
+          label IDs were reused in recursive contexts. This bug was subtle and only visible in nested structures.
+          The team solved it by centralizing label allocation through a monotonic counter and adding unit tests for
+          nested branches and nested loops. After this fix, generated code maintained proper control flow in all tested
+          scenarios.
+        </p>
+
+        <h3>6.2 What We Learned About Compiler Design</h3>
+        <p>
+          The project made clear that compiler phases are conceptually distinct but practically interconnected.
+          Decisions made in lexical conventions influence parser complexity; AST design determines how easy semantic
+          checks and code generation become. We learned to define strong interfaces between phases, such as stable
+          token types and typed AST nodes, to avoid cascading refactors.
+        </p>
+        <p>
+          We also learned that correctness and developer usability must be balanced. A technically correct parser that
+          emits poor diagnostics still creates a weak user experience. Therefore, we treated diagnostics as a first-class
+          feature. We added structured error objects carrying phase name, line, column, message, and hint, which improved
+          both debugging and test verification.
+        </p>
+        <p>
+          A key insight from optimization work is that even small transformations require careful semantic guarantees.
+          For example, constant folding appears simple, but folding expressions with division or mixed types must preserve
+          language rules precisely. This taught us to pair every optimization rule with explicit preconditions and regression
+          tests to ensure no behavior changes occur unexpectedly.
+        </p>
+        <p>
+          Finally, we gained practical understanding of intermediate representations. Converting high-level structures into
+          three-address style operations clarified control flow and made optimization and target generation much cleaner.
+          IR served as a unifying abstraction that reduced complexity in later stages and improved maintainability.
+        </p>
+
+        <h3>6.3 Future Improvements</h3>
+        <p>
+          With additional time, we would expand language features to include arrays, strings, and user-defined structures,
+          along with stronger type inference for mixed numeric expressions. We would also add short-circuit evaluation in
+          optimization and perform control-flow graph based passes such as loop-invariant code motion.
+        </p>
+        <p>
+          Another planned improvement is modular tooling support: a command-line mode with configurable flags, an interactive
+          visualization mode that renders parse trees and symbol tables, and JSON output for integration with external IDE tools.
+          This would make the compiler easier to evaluate in educational and automated grading contexts.
+        </p>
+        <p>
+          On testing, we would introduce differential testing against reference interpreters and increase fuzzing coverage for
+          lexer/parser edge cases. We also intend to include a richer benchmark suite to measure optimization gains and verify
+          that generated target code remains efficient as language features grow.
+        </p>
+
+        <h3>6.4 Individual Contributions</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Contribution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ayesha Khan</td>
+              <td>Lexical and Syntax Lead</td>
+              <td>Designed token specification, implemented DFA-based scanner, authored LL-friendly grammar, and built recursive descent parser with syntax diagnostics.</td>
+            </tr>
+            <tr>
+              <td>Bilal Ahmed</td>
+              <td>Semantic and Symbol Table Engineer</td>
+              <td>Implemented scoped symbol table stack, type checker, function signature validation, and semantic error recovery with detailed reporting.</td>
+            </tr>
+            <tr>
+              <td>Hassan Raza</td>
+              <td>IR and Target Code Engineer</td>
+              <td>Created AST-to-IR lowering rules, designed label/jump strategy, implemented target stack-machine code generation, and validated nested control-flow correctness.</td>
+            </tr>
+            <tr>
+              <td>Mariam Iqbal</td>
+              <td>Optimization and QA Lead</td>
+              <td>Implemented constant folding and dead code elimination, prepared regression and end-to-end tests, and coordinated performance profiling and documentation polish.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>6.5 Closing Reflection</h3>
+        <p>
+          Completing a compiler end-to-end transformed abstract classroom concepts into concrete engineering practice.
+          The team learned to treat each phase as both an isolated component and part of a larger pipeline contract.
+          Through repeated debugging and redesign, we built confidence in language implementation, formal reasoning,
+          and collaborative software construction. The final result is a robust educational compiler architecture that
+          can be extended into a richer language platform in future iterations.
+        </p>
+      </article>
+    </section>
+
+    <footer>
+      Mini Compiler Project Documentation - Language Reference and Complete Compiler Design
+    </footer>
+  </main>
+</body>
+</html>
